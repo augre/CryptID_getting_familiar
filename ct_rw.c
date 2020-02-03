@@ -29,26 +29,20 @@ void writeCipherTextToFile(CipherTextTuple* ciphertext)
     printf("%s\n", ciphertext->cipherV);
     printf("%lu\n", ciphertext->cipherWLength);
     printf("%s\n", ciphertext->cipherW);
-}
-void writeCipherUxToFile(CipherTextTuple* ciphertext)
-{
-    FILE * fp;
+
     fp = fopen ("CT/cipherUx","w+");
     if (fp != NULL) {
         mpz_out_str(fp, 10, ciphertext->cipherU.x);
         fclose(fp);
     }
     printf ("  wrote  "); mpz_out_str (stdout, 10, ciphertext->cipherU.x); printf("\n");
-}
 
-void writeCipherUyToFile(CipherTextTuple* ciphertext)
-{
-    FILE * fp;
     fp = fopen ("CT/cipherUy","w+");
     if (fp != NULL) {
         mpz_out_str(fp, 10, ciphertext->cipherU.y);
         fclose(fp);
     }
+    printf ("  wrote  "); mpz_out_str (stdout, 10, ciphertext->cipherU.y); printf("\n");
 }
 
 CipherTextTuple readCipherTextFromFile()
@@ -87,16 +81,18 @@ CipherTextTuple readCipherTextFromFile()
         mpz_inp_str(x, fp, 10);
         fclose(fp);
     }
-    mpz_set(ciphertext.cipherU.x, x);
-    printf ("  read in  "); mpz_out_str (stdout, 10, ciphertext.cipherU.x); printf("\n");
 
     fp = fopen ("CT/cipherUy","r");
     if (fp != NULL) {
         mpz_inp_str(y, fp, 10);
         fclose(fp);
     }
-    mpz_set(ciphertext.cipherU.y, y);
+
+    ciphertext.cipherU = affine_init(x, y);
+
+    printf ("  read in  "); mpz_out_str (stdout, 10, ciphertext.cipherU.x); printf("\n");
     printf ("  read in  "); mpz_out_str (stdout, 10, ciphertext.cipherU.y); printf("\n");
+    return ciphertext;
 }
 
 int main()
@@ -122,5 +118,17 @@ int main()
     }
     (validation_isCipherTextTupleValid(*ciphertext, publicParameters->ellipticCurve.fieldOrder)) ? (printf("cipher valid\n")) : (printf("cipher invalid\n"));
 
+    writeCipherTextToFile(ciphertext);
+
+    CipherTextTuple ct = readCipherTextFromFile();
+
+    (validation_isAffinePointValid(ct.cipherU, publicParameters->ellipticCurve.fieldOrder)) ? (printf("cipherU aff point valid\n")) : (printf("cipherU aff point invalid\n"));
+    (ct.cipherV) ? (printf("cipherV valid\n")) : (printf("cipherV invalid\n"));
+//    (ct.cipherVLength != 0)
+//    (ct.cipherW)
+//    (ct.cipherWLength != 0)
+
+
+    (validation_isCipherTextTupleValid(ct, publicParameters->ellipticCurve.fieldOrder)) ? (printf("read cipher valid\n")) : (printf("read cipher invalid\n"));
     return 0;
 }
